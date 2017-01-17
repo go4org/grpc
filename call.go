@@ -36,114 +36,27 @@ package grpc
 import (
 	"bytes"
 	"io"
-	"math"
+	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
 	"golang.org/x/net/trace"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/stats"
-	"google.golang.org/grpc/transport"
 )
 
-// recvResponse receives and parses an RPC response.
-// On error, it returns the error and indicates whether the call should be retried.
+// Invoke sends a non-streaming RPC request on the wire and returns
+// after a response is received.
 //
-// TODO(zhaoq): Check whether the received message sequence is valid.
-// TODO ctx is used for stats collection and processing. It is the context passed from the application.
-func recvResponse(ctx context.Context, dopts dialOptions, t transport.ClientTransport, c *callInfo, stream *transport.Stream, reply interface{}) (err error) {
-	// Try to acquire header metadata from the server if there is any.
-	defer func() {
-		if err != nil {
-			if _, ok := err.(transport.ConnectionError); !ok {
-				t.CloseStream(stream, err)
-			}
-		}
-	}()
-	c.headerMD, err = stream.Header()
-	if err != nil {
-		return
-	}
-	p := &parser{r: stream}
-	var inPayload *stats.InPayload
-	if dopts.copts.StatsHandler != nil {
-		inPayload = &stats.InPayload{
-			Client: true,
-		}
-	}
-	for {
-		if err = recv(p, dopts.codec, stream, dopts.dc, reply, math.MaxInt32, inPayload); err != nil {
-			if err == io.EOF {
-				break
-			}
-			return
-		}
-	}
-	if inPayload != nil && err == io.EOF && stream.StatusCode() == codes.OK {
-		// TODO in the current implementation, inTrailer may be handled before inPayload in some cases.
-		// Fix the order if necessary.
-		dopts.copts.StatsHandler.HandleRPC(ctx, inPayload)
-	}
-	c.trailerMD = stream.Trailer()
-	return nil
-}
-
-// sendRequest writes out various information of an RPC such as Context and Message.
-func sendRequest(ctx context.Context, dopts dialOptions, compressor Compressor, callHdr *transport.CallHdr, t transport.ClientTransport, args interface{}, opts *transport.Options) (_ *transport.Stream, err error) {
-	stream, err := t.NewStream(ctx, callHdr)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err != nil {
-			// If err is connection error, t will be closed, no need to close stream here.
-			if _, ok := err.(transport.ConnectionError); !ok {
-				t.CloseStream(stream, err)
-			}
-		}
-	}()
-	var (
-		cbuf       *bytes.Buffer
-		outPayload *stats.OutPayload
-	)
-	if compressor != nil {
-		cbuf = new(bytes.Buffer)
-	}
-	if dopts.copts.StatsHandler != nil {
-		outPayload = &stats.OutPayload{
-			Client: true,
-		}
-	}
-	outBuf, err := encode(dopts.codec, args, compressor, cbuf, outPayload)
-	if err != nil {
-		return nil, Errorf(codes.Internal, "grpc: %v", err)
-	}
-	err = t.Write(stream, outBuf, opts)
-	if err == nil && outPayload != nil {
-		outPayload.SentTime = time.Now()
-		dopts.copts.StatsHandler.HandleRPC(ctx, outPayload)
-	}
-	// t.NewStream(...) could lead to an early rejection of the RPC (e.g., the service/method
-	// does not exist.) so that t.Write could get io.EOF from wait(...). Leave the following
-	// recvResponse to get the final status.
-	if err != nil && err != io.EOF {
-		return nil, err
-	}
-	// Sent successfully.
-	return stream, nil
-}
-
-// Invoke sends the RPC request on the wire and returns after response is received.
-// Invoke is called by generated code. Also users can call Invoke directly when it
-// is really needed in their use cases.
+// Invoke is generally only called by generated code.
 func Invoke(ctx context.Context, method string, args, reply interface{}, cc *ClientConn, opts ...CallOption) error {
-	if cc.dopts.unaryInt != nil {
-		return cc.dopts.unaryInt(ctx, method, args, reply, cc, invoke, opts...)
-	}
-	return invoke(ctx, method, args, reply, cc, opts...)
+	return cc.invoke(ctx, method, args, reply, opts...)
 }
 
-func invoke(ctx context.Context, method string, args, reply interface{}, cc *ClientConn, opts ...CallOption) (e error) {
+func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply interface{}, opts ...CallOption) (reterr error) {
 	c := defaultCallInfo
 	if mc, ok := cc.getMethodConfig(method); ok {
 		c.failFast = !mc.WaitForReady
@@ -173,8 +86,8 @@ func invoke(ctx context.Context, method string, args, reply interface{}, cc *Cli
 		c.traceInfo.tr.LazyLog(&c.traceInfo.firstLine, false)
 		// TODO(dsymonds): Arrange for c.traceInfo.firstLine.remoteAddr to be set.
 		defer func() {
-			if e != nil {
-				c.traceInfo.tr.LazyLog(&fmtStringer{"%v", []interface{}{e}}, true)
+			if reterr != nil {
+				c.traceInfo.tr.LazyLog(&fmtStringer{"%v", []interface{}{reterr}}, true)
 				c.traceInfo.tr.SetError()
 			}
 		}()
@@ -189,98 +102,173 @@ func invoke(ctx context.Context, method string, args, reply interface{}, cc *Cli
 		}
 		sh.HandleRPC(ctx, begin)
 	}
-	defer func() {
-		if sh != nil {
+	if sh != nil {
+		defer func() {
 			end := &stats.End{
 				Client:  true,
 				EndTime: time.Now(),
-				Error:   e,
+				Error:   reterr,
 			}
 			sh.HandleRPC(ctx, end)
-		}
-	}()
-	topts := &transport.Options{
-		Last:  true,
-		Delay: false,
+		}()
 	}
-	for {
-		var (
-			err    error
-			t      transport.ClientTransport
-			stream *transport.Stream
-			// Record the put handler from Balancer.Get(...). It is called once the
-			// RPC has completed or failed.
-			put func()
-		)
-		// TODO(zhaoq): Need a formal spec of fail-fast.
-		callHdr := &transport.CallHdr{
-			Host:   cc.authority,
-			Method: method,
-		}
-		if cc.dopts.cp != nil {
-			callHdr.SendCompress = cc.dopts.cp.Type()
-		}
+	// TODO(bradfitz): non-failfast retries & proper error mapping.
+	// Previously:
+	// Retry a non-failfast RPC when
+	// i) there is a connection error; or
+	// ii) the server started to drain before this RPC was initiated.
+	//if _, ok := err.(transport.ConnectionError); ok || err == transport.ErrStreamDrain {
+	//if c.failFast {
+	//return toRPCErr(err)
+	//}
+	// ...
+	//return toRPCErr(err)
+	//..
+	//if err == errConnClosing || err == errConnUnavailable {
+	//			if c.failFast {
+	//				return Errorf(codes.Unavailable, "%v", err)
+	//			}
+	//			continue
+	//}
+	// All the other errors are treated as Internal errors.
+	//		return Errorf(codes.Internal, "%v", err)
 
-		gopts := BalancerGetOptions{
-			BlockingWait: !c.failFast,
-		}
-		t, put, err = cc.getTransport(ctx, gopts)
-		if err != nil {
-			// TODO(zhaoq): Probably revisit the error handling.
-			if _, ok := err.(*rpcError); ok {
-				return err
-			}
-			if err == errConnClosing || err == errConnUnavailable {
-				if c.failFast {
-					return Errorf(codes.Unavailable, "%v", err)
-				}
-				continue
-			}
-			// All the other errors are treated as Internal errors.
-			return Errorf(codes.Internal, "%v", err)
-		}
-		if c.traceInfo.tr != nil {
-			c.traceInfo.tr.LazyLog(&payload{sent: true, msg: args}, true)
-		}
-		stream, err = sendRequest(ctx, cc.dopts, cc.dopts.cp, callHdr, t, args, topts)
-		if err != nil {
-			if put != nil {
-				put()
-				put = nil
-			}
-			// Retry a non-failfast RPC when
-			// i) there is a connection error; or
-			// ii) the server started to drain before this RPC was initiated.
-			if _, ok := err.(transport.ConnectionError); ok || err == transport.ErrStreamDrain {
-				if c.failFast {
-					return toRPCErr(err)
-				}
-				continue
-			}
-			return toRPCErr(err)
-		}
-		err = recvResponse(ctx, cc.dopts, t, &c, stream, reply)
-		if err != nil {
-			if put != nil {
-				put()
-				put = nil
-			}
-			if _, ok := err.(transport.ConnectionError); ok || err == transport.ErrStreamDrain {
-				if c.failFast {
-					return toRPCErr(err)
-				}
-				continue
-			}
-			return toRPCErr(err)
-		}
-		if c.traceInfo.tr != nil {
-			c.traceInfo.tr.LazyLog(&payload{sent: false, msg: reply}, true)
-		}
-		t.CloseStream(stream, nil)
-		if put != nil {
-			put()
-			put = nil
-		}
-		return Errorf(stream.StatusCode(), "%s", stream.StatusDesc())
+	var (
+		cbuf        *bytes.Buffer
+		statsOut    *stats.OutPayload
+		compressAlg string
+	)
+	if cc.dopts.cp != nil {
+		compressAlg = cc.dopts.cp.Type()
+		cbuf = new(bytes.Buffer)
 	}
+	if c.traceInfo.tr != nil {
+		c.traceInfo.tr.LazyLog(&payload{sent: true, msg: args}, true)
+	}
+	if cc.dopts.copts.StatsHandler != nil {
+		statsOut = &stats.OutPayload{
+			Client: true,
+		}
+	}
+	outBuf, err := encode(cc.dopts.codec, args, cc.dopts.cp, cbuf, statsOut)
+	if err != nil {
+		return Errorf(codes.Internal, "grpc: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", cc.target+method, bytes.NewReader(outBuf))
+	if err != nil {
+		return Errorf(codes.Internal, "grpc: %v", err)
+	}
+	hdr := req.Header
+	hdr.Set("Te", "trailers")
+	hdr.Set("Content-Type", "application/grpc+proto")
+	if compressAlg != "" {
+		hdr.Set("grpc-encoding", compressAlg)
+	}
+	if md, ok := metadata.FromContext(ctx); ok {
+		for k, vv := range md {
+			k = http.CanonicalHeaderKey(k)
+			for _, v := range vv {
+				hdr.Add(k, v)
+			}
+		}
+	}
+	if dl, ok := ctx.Deadline(); ok {
+		timeout := dl.Sub(time.Now())
+		hdr.Set("Grpc-Timeout", encodeTimeout(timeout))
+	}
+
+	res, err := cc.hc.Do(req)
+	if err != nil {
+		// TODO(bradfitz): error mapping; see TODOs above
+		// For now:
+		return Errorf(codes.Internal, "grpc: %v", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		// TODO: error mapping; see TODOs above.
+		return Errorf(codes.Internal, "grpc: %v", err)
+	}
+	if !strings.HasPrefix(res.Header.Get("Content-Type"), "application/grpc") {
+		// TODO: error mapping; see TODOs above.
+		return Errorf(codes.Internal, "grpc: %v", err)
+	}
+	maxMsgSize := 10 << 20 // TODO(bradfitz): set this
+
+	var inPayload *stats.InPayload
+	if cc.dopts.copts.StatsHandler != nil {
+		inPayload = &stats.InPayload{
+			Client: true,
+		}
+	}
+
+	p := &parser{r: res.Body}
+	err = recvNew(p,
+		cc.dopts.codec,
+		compressAlg,
+		cc.dopts.dc,
+		reply,
+		maxMsgSize,
+		inPayload)
+
+	if err != nil {
+		// TODO: error mapping; see TODOs above.
+		return Errorf(codes.Internal, "grpc: %v", err)
+	}
+
+	// Check for only 1 message. We should hit an EOF immediately.
+	// TODO(bradfitz): I believe. Looks like streaming RPCs go via another path.
+	if _, err := res.Body.Read(p.header[:1]); err != io.EOF {
+		return Errorf(codes.Internal, "grpc: malformed response with extra data after first message")
+	}
+
+	// TODO(bradfitz): now that we've seen res.Body return EOF,
+	// the Trailers are valid.  Capture that and return it if that
+	// copt is set.
+
+	if statsOut != nil {
+		statsOut.SentTime = time.Now() // TODO(bradfitz): set this earlier probably
+		cc.dopts.copts.StatsHandler.HandleRPC(ctx, statsOut)
+	}
+
+	if c.traceInfo.tr != nil {
+		c.traceInfo.tr.LazyLog(&payload{sent: false, msg: reply}, true)
+	}
+	return nil
+}
+
+const maxTimeoutValue int64 = 100000000 - 1
+
+// div does integer division and round-up the result. Note that this is
+// equivalent to (d+r-1)/r but has less chance to overflow.
+func div(d, r time.Duration) int64 {
+	if m := d % r; m > 0 {
+		return int64(d/r + 1)
+	}
+	return int64(d / r)
+}
+
+// TODO(zhaoq): It is the simplistic and not bandwidth efficient. Improve it.
+func encodeTimeout(t time.Duration) string {
+	if t <= 0 {
+		return "0n"
+	}
+	if d := div(t, time.Nanosecond); d <= maxTimeoutValue {
+		return strconv.FormatInt(d, 10) + "n"
+	}
+	if d := div(t, time.Microsecond); d <= maxTimeoutValue {
+		return strconv.FormatInt(d, 10) + "u"
+	}
+	if d := div(t, time.Millisecond); d <= maxTimeoutValue {
+		return strconv.FormatInt(d, 10) + "m"
+	}
+	if d := div(t, time.Second); d <= maxTimeoutValue {
+		return strconv.FormatInt(d, 10) + "S"
+	}
+	if d := div(t, time.Minute); d <= maxTimeoutValue {
+		return strconv.FormatInt(d, 10) + "M"
+	}
+	// Note that maxTimeoutValue * time.Hour > MaxInt64.
+	return strconv.FormatInt(div(t, time.Hour), 10) + "H"
 }

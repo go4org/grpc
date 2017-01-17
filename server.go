@@ -110,8 +110,6 @@ type options struct {
 	cp                   Compressor
 	dc                   Decompressor
 	maxMsgSize           int
-	unaryInt             UnaryServerInterceptor
-	streamInt            StreamServerInterceptor
 	inTapHandle          tap.ServerInHandle
 	statsHandler         stats.Handler
 	maxConcurrentStreams uint32
@@ -164,29 +162,6 @@ func MaxConcurrentStreams(n uint32) ServerOption {
 func Creds(c credentials.TransportCredentials) ServerOption {
 	return func(o *options) {
 		o.creds = c
-	}
-}
-
-// UnaryInterceptor returns a ServerOption that sets the UnaryServerInterceptor for the
-// server. Only one unary interceptor can be installed. The construction of multiple
-// interceptors (e.g., chaining) can be implemented at the caller.
-func UnaryInterceptor(i UnaryServerInterceptor) ServerOption {
-	return func(o *options) {
-		if o.unaryInt != nil {
-			panic("The unary server interceptor has been set.")
-		}
-		o.unaryInt = i
-	}
-}
-
-// StreamInterceptor returns a ServerOption that sets the StreamServerInterceptor for the
-// server. Only one stream interceptor can be installed.
-func StreamInterceptor(i StreamServerInterceptor) ServerOption {
-	return func(o *options) {
-		if o.streamInt != nil {
-			panic("The stream server interceptor has been set.")
-		}
-		o.streamInt = i
 	}
 }
 
@@ -445,26 +420,29 @@ func (s *Server) handleRawConn(rawConn net.Conn) {
 // This is run in its own goroutine (it does network I/O in
 // transport.NewServerTransport).
 func (s *Server) serveHTTP2Transport(c net.Conn, authInfo credentials.AuthInfo) {
-	config := &transport.ServerConfig{
-		MaxStreams:   s.opts.maxConcurrentStreams,
-		AuthInfo:     authInfo,
-		InTapHandle:  s.opts.inTapHandle,
-		StatsHandler: s.opts.statsHandler,
-	}
-	st, err := transport.NewServerTransport("http2", c, config)
-	if err != nil {
-		s.mu.Lock()
-		s.errorf("NewServerTransport(%q) failed: %v", c.RemoteAddr(), err)
-		s.mu.Unlock()
-		c.Close()
-		grpclog.Println("grpc: Server.Serve failed to create ServerTransport: ", err)
-		return
-	}
-	if !s.addConn(st) {
-		st.Close()
-		return
-	}
-	s.serveStreams(st)
+	panic("TODO; use call serveUsingHandler instead")
+	/*
+		config := &transport.ServerConfig{
+			MaxStreams:   s.opts.maxConcurrentStreams,
+			AuthInfo:     authInfo,
+			InTapHandle:  s.opts.inTapHandle,
+			StatsHandler: s.opts.statsHandler,
+		}
+		st, err := transport.NewServerTransport("http2", c, config)
+		if err != nil {
+			s.mu.Lock()
+			s.errorf("NewServerTransport(%q) failed: %v", c.RemoteAddr(), err)
+			s.mu.Unlock()
+			c.Close()
+			grpclog.Println("grpc: Server.Serve failed to create ServerTransport: ", err)
+			return
+		}
+		if !s.addConn(st) {
+			st.Close()
+			return
+		}
+		s.serveStreams(st)
+	*/
 }
 
 func (s *Server) serveStreams(st transport.ServerTransport) {
@@ -686,7 +664,7 @@ func (s *Server) processUnaryRPC(t transport.ServerTransport, stream *transport.
 			if inPayload != nil {
 				inPayload.WireLength = len(req)
 			}
-			if pf == compressionMade {
+			if pf == compressed {
 				var err error
 				req, err = s.opts.dc.Do(bytes.NewReader(req))
 				if err != nil {
@@ -716,7 +694,7 @@ func (s *Server) processUnaryRPC(t transport.ServerTransport, stream *transport.
 			}
 			return nil
 		}
-		reply, appErr := md.Handler(srv.server, stream.Context(), df, s.opts.unaryInt)
+		reply, appErr := md.Handler(srv.server, stream.Context(), df, nil)
 		if appErr != nil {
 			if err, ok := appErr.(*rpcError); ok {
 				statusCode = err.code
@@ -814,17 +792,7 @@ func (s *Server) processStreamingRPC(t transport.ServerTransport, stream *transp
 			ss.mu.Unlock()
 		}()
 	}
-	var appErr error
-	if s.opts.streamInt == nil {
-		appErr = sd.Handler(srv.server, ss)
-	} else {
-		info := &StreamServerInfo{
-			FullMethod:     stream.Method(),
-			IsClientStream: sd.ClientStreams,
-			IsServerStream: sd.ServerStreams,
-		}
-		appErr = s.opts.streamInt(srv.server, ss, info, sd.Handler)
-	}
+	appErr := sd.Handler(srv.server, ss)
 	if appErr != nil {
 		if err, ok := appErr.(*rpcError); ok {
 			ss.statusCode = err.code

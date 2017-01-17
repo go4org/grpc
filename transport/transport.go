@@ -39,6 +39,7 @@ package transport // import "google.golang.org/grpc/transport"
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -287,6 +288,10 @@ func (s *Stream) StatusDesc() string {
 	return s.statusDesc
 }
 
+// ErrIllegalHeaderWrite indicates that setting header is illegal because of
+// the stream's state.
+var ErrIllegalHeaderWrite = errors.New("transport: the stream is done or WriteHeader was already called")
+
 // SetHeader sets the header metadata. This can be called multiple times.
 // Server side only.
 func (s *Stream) SetHeader(md metadata.MD) error {
@@ -364,12 +369,6 @@ type ServerConfig struct {
 	StatsHandler stats.Handler
 }
 
-// NewServerTransport creates a ServerTransport with conn or non-nil error
-// if it fails.
-func NewServerTransport(protocol string, conn net.Conn, config *ServerConfig) (ServerTransport, error) {
-	return newHTTP2Server(conn, config)
-}
-
 // ConnectOptions covers all relevant options for communicating with the server.
 type ConnectOptions struct {
 	// UserAgent is the application user agent.
@@ -390,12 +389,6 @@ type ConnectOptions struct {
 type TargetInfo struct {
 	Addr     string
 	Metadata interface{}
-}
-
-// NewClientTransport establishes the transport with the required ConnectOptions
-// and returns it to the caller.
-func NewClientTransport(ctx context.Context, target TargetInfo, opts ConnectOptions) (ClientTransport, error) {
-	return newHTTP2Client(ctx, target, opts)
 }
 
 // Options provides additional hints and information for message
@@ -432,44 +425,6 @@ type CallHdr struct {
 	// only a hint. The transport may modify the flush decision
 	// for performance purposes.
 	Flush bool
-}
-
-// ClientTransport is the common interface for all gRPC client-side transport
-// implementations.
-type ClientTransport interface {
-	// Close tears down this transport. Once it returns, the transport
-	// should not be accessed any more. The caller must make sure this
-	// is called only once.
-	Close() error
-
-	// GracefulClose starts to tear down the transport. It stops accepting
-	// new RPCs and wait the completion of the pending RPCs.
-	GracefulClose() error
-
-	// Write sends the data for the given stream. A nil stream indicates
-	// the write is to be performed on the transport as a whole.
-	Write(s *Stream, data []byte, opts *Options) error
-
-	// NewStream creates a Stream for an RPC.
-	NewStream(ctx context.Context, callHdr *CallHdr) (*Stream, error)
-
-	// CloseStream clears the footprint of a stream when the stream is
-	// not needed any more. The err indicates the error incurred when
-	// CloseStream is called. Must be called when a stream is finished
-	// unless the associated transport is closing.
-	CloseStream(stream *Stream, err error)
-
-	// Error returns a channel that is closed when some I/O error
-	// happens. Typically the caller should have a goroutine to monitor
-	// this in order to take action (e.g., close the current transport
-	// and create a new one) in error case. It should not return nil
-	// once the transport is initiated.
-	Error() <-chan struct{}
-
-	// GoAway returns a channel that is closed when ClientTranspor
-	// receives the draining signal from the server (e.g., GOAWAY frame in
-	// HTTP/2).
-	GoAway() <-chan struct{}
 }
 
 // ServerTransport is the common interface for all gRPC server-side transport
