@@ -1,5 +1,4 @@
 /*
- *
  * Copyright 2014, Google Inc.
  * All rights reserved.
  *
@@ -92,7 +91,7 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 			}
 		}()
 	}
-	sh := cc.dopts.copts.StatsHandler
+	sh := cc.opts.statsHandler
 	if sh != nil {
 		ctx = sh.TagRPC(ctx, &stats.RPCTagInfo{FullMethodName: method})
 		begin := &stats.Begin{
@@ -138,24 +137,25 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 		statsOut    *stats.OutPayload
 		compressAlg string
 	)
-	if cc.dopts.cp != nil {
-		compressAlg = cc.dopts.cp.Type()
+	if cc.opts.cp != nil {
+		compressAlg = cc.opts.cp.Type()
 		cbuf = new(bytes.Buffer)
 	}
 	if c.traceInfo.tr != nil {
 		c.traceInfo.tr.LazyLog(&payload{sent: true, msg: args}, true)
 	}
-	if cc.dopts.copts.StatsHandler != nil {
+	if cc.opts.statsHandler != nil {
 		statsOut = &stats.OutPayload{
 			Client: true,
 		}
 	}
-	outBuf, err := encode(cc.dopts.codec, args, cc.dopts.cp, cbuf, statsOut)
+	outBuf, err := encode(cc.opts.codec, args, cc.opts.cp, cbuf, statsOut)
 	if err != nil {
 		return Errorf(codes.Internal, "grpc: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", cc.target+method, bytes.NewReader(outBuf))
+	urlStr := cc.target + method
+	req, err := http.NewRequest("POST", urlStr, bytes.NewReader(outBuf))
 	if err != nil {
 		return Errorf(codes.Internal, "grpc: %v", err)
 	}
@@ -163,7 +163,11 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 	hdr.Set("Te", "trailers")
 	hdr.Set("Content-Type", "application/grpc+proto")
 	if compressAlg != "" {
-		hdr.Set("grpc-encoding", compressAlg)
+		hdr.Set("Grpc-Encoding", compressAlg)
+	}
+	if cc.opts.userAgent != "" {
+		// TODO(bradfitz): append our version? what'd it do before?
+		hdr.Set("User-Agent", cc.opts.userAgent)
 	}
 	if md, ok := metadata.FromContext(ctx); ok {
 		for k, vv := range md {
@@ -171,6 +175,15 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 			for _, v := range vv {
 				hdr.Add(k, v)
 			}
+		}
+	}
+	for _, rpcCred := range cc.opts.perRPCCreds {
+		metadata, err := rpcCred.GetRequestMetadata(ctx, urlStr)
+		if err != nil {
+			return err
+		}
+		for k, v := range metadata {
+			hdr.Add(k, v)
 		}
 	}
 	if dl, ok := ctx.Deadline(); ok {
@@ -197,7 +210,7 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 	maxMsgSize := 10 << 20 // TODO(bradfitz): set this
 
 	var inPayload *stats.InPayload
-	if cc.dopts.copts.StatsHandler != nil {
+	if cc.opts.statsHandler != nil {
 		inPayload = &stats.InPayload{
 			Client: true,
 		}
@@ -205,9 +218,9 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 
 	p := &parser{r: res.Body}
 	err = recvNew(p,
-		cc.dopts.codec,
+		cc.opts.codec,
 		compressAlg,
-		cc.dopts.dc,
+		cc.opts.dc,
 		reply,
 		maxMsgSize,
 		inPayload)
@@ -229,7 +242,7 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 
 	if statsOut != nil {
 		statsOut.SentTime = time.Now() // TODO(bradfitz): set this earlier probably
-		cc.dopts.copts.StatsHandler.HandleRPC(ctx, statsOut)
+		cc.opts.statsHandler.HandleRPC(ctx, statsOut)
 	}
 
 	if c.traceInfo.tr != nil {

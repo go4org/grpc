@@ -35,9 +35,6 @@
 package grpc
 
 import (
-	"context"
-	"errors"
-
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/naming"
 )
@@ -47,22 +44,17 @@ type Balancer struct{}
 
 // Deprecated: don't use for now.
 func RoundRobin(r naming.Resolver) Balancer {
-	return Balancer{}
+	panic("temporarily no longer supported, at least not here")
 }
 
 // Deprecated: don't use for now.
 func WithBalancer(b Balancer) DialOption {
-	return func(o *dialOptions) {}
+	return func(o *clientOptions) {}
 }
 
 // Deprecated: don't use for now.
 func WithTransportCredentials(creds credentials.TransportCredentials) DialOption {
-	return func(o *dialOptions) {
-		o.copts.TransportCredentials = creds
+	return func(o *clientOptions) {
+		panic("temporarily no longer supported, at least not here")
 	}
-}
-
-// Deprecated: don't use for now.
-func DialContext(ctx context.Context, target string, opts ...DialOption) (conn *ClientConn, err error) {
-	return nil, errors.New("grpc: DialContext is deleted for now in the experimental branch")
 }

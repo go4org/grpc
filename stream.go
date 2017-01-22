@@ -121,8 +121,8 @@ func newClientStream(ctx context.Context, desc *StreamDesc, cc *ClientConn, meth
 	_ = flush
 
 	var compressAlg string
-	if cc.dopts.cp != nil {
-		compressAlg = cc.dopts.cp.Type()
+	if cc.opts.cp != nil {
+		compressAlg = cc.opts.cp.Type()
 	}
 	_ = compressAlg
 	var trInfo traceInfo
@@ -144,7 +144,7 @@ func newClientStream(ctx context.Context, desc *StreamDesc, cc *ClientConn, meth
 			}
 		}()
 	}
-	sh := cc.dopts.copts.StatsHandler
+	sh := cc.opts.statsHandler
 	if sh != nil {
 		ctx = sh.TagRPC(ctx, &stats.RPCTagInfo{FullMethodName: method})
 		begin := &stats.Begin{
@@ -172,7 +172,7 @@ func newClientStream(ctx context.Context, desc *StreamDesc, cc *ClientConn, meth
 			if _, ok := err.(*rpcError); ok {
 				return nil, err
 			}
-			if err == errConnClosing || err == errConnUnavailable {
+			if false { // err == errConnClosing || err == errConnUnavailable {
 				if c.failFast {
 					return nil, Errorf(codes.Unavailable, "%v", err)
 				}
@@ -189,9 +189,9 @@ func newClientStream(ctx context.Context, desc *StreamDesc, cc *ClientConn, meth
 			opts:   opts,
 			c:      c,
 			desc:   desc,
-			codec:  cc.dopts.codec,
-			cp:     cc.dopts.cp,
-			dc:     cc.dopts.dc,
+			codec:  cc.opts.codec,
+			cp:     cc.opts.cp,
+			dc:     cc.opts.dc,
 			cancel: cancel,
 
 			put: put,
@@ -203,9 +203,9 @@ func newClientStream(ctx context.Context, desc *StreamDesc, cc *ClientConn, meth
 			trInfo:  trInfo,
 
 			statsCtx:     ctx,
-			statsHandler: cc.dopts.copts.StatsHandler,
+			statsHandler: cc.opts.copts.StatsHandler,
 		}
-		if cc.dopts.cp != nil {
+		if cc.opts.cp != nil {
 			cs.cbuf = new(bytes.Buffer)
 		}
 		// Listen on ctx.Done() to detect cancellation and s.Done() to detect normal termination

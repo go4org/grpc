@@ -34,14 +34,13 @@
 package grpc
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/stats"
-	"google.golang.org/grpc/transport"
 )
 
 var (
@@ -65,32 +64,32 @@ var (
 	// errCredentialsConflict indicates that grpc.WithTransportCredentials()
 	// and grpc.WithInsecure() are both called for a connection.
 	errCredentialsConflict = errors.New("grpc: transport credentials are set for an insecure connection (grpc.WithTransportCredentials() and grpc.WithInsecure() are both called)")
-	// errNetworkIO indicates that the connection is down due to some network I/O error.
-	errNetworkIO = errors.New("grpc: failed with network I/O error")
-	// errConnDrain indicates that the connection starts to be drained and does not accept any new RPCs.
-	errConnDrain = errors.New("grpc: the connection is drained")
-	// errConnClosing indicates that the connection is closing.
-	errConnClosing = errors.New("grpc: the connection is closing")
-	// errConnUnavailable indicates that the connection is unavailable.
-	errConnUnavailable = errors.New("grpc: the connection is unavailable")
-	errNoAddr          = errors.New("grpc: there is no address available to dial")
 )
 
-// dialOptions configure a Dial call. dialOptions are set by the DialOption
-// values passed to Dial.
-type dialOptions struct {
+type clientOptions struct {
 	codec Codec
 	cp    Compressor
 	dc    Decompressor
-	copts transport.ConnectOptions
+
+	// All may be zero:
+	perRPCCreds  []credentials.PerRPCCredentials
+	userAgent    string
+	statsHandler stats.Handler
+
+	//copts transport.ConnectOptions
 }
 
-// DialOption configures how we set up the connection.
-type DialOption func(*dialOptions)
+// DialOption is a client option.
+//
+// Despite its name, it does not necessarily have anything to do with
+// dialing.
+//
+// TODO: rename this.
+type DialOption func(*clientOptions)
 
 // WithCodec returns a DialOption which sets a codec for message marshaling and unmarshaling.
 func WithCodec(c Codec) DialOption {
-	return func(o *dialOptions) {
+	return func(o *clientOptions) {
 		o.codec = c
 	}
 }
@@ -98,7 +97,7 @@ func WithCodec(c Codec) DialOption {
 // WithCompressor returns a DialOption which sets a CompressorGenerator for generating message
 // compressor.
 func WithCompressor(cp Compressor) DialOption {
-	return func(o *dialOptions) {
+	return func(o *clientOptions) {
 		o.cp = cp
 	}
 }
@@ -106,40 +105,48 @@ func WithCompressor(cp Compressor) DialOption {
 // WithDecompressor returns a DialOption which sets a DecompressorGenerator for generating
 // message decompressor.
 func WithDecompressor(dc Decompressor) DialOption {
-	return func(o *dialOptions) {
+	return func(o *clientOptions) {
 		o.dc = dc
 	}
 }
 
-// WithPerRPCCredentials returns a DialOption which sets
+// WithPerRPCCredentials returns an option which sets
 // credentials which will place auth state on each outbound RPC.
 func WithPerRPCCredentials(creds credentials.PerRPCCredentials) DialOption {
-	return func(o *dialOptions) {
-		o.copts.PerRPCCredentials = append(o.copts.PerRPCCredentials, creds)
+	return func(o *clientOptions) {
+		o.perRPCCreds = append(o.perRPCCreds, creds)
 	}
 }
 
 // WithStatsHandler returns a DialOption that specifies the stats handler
 // for all the RPCs and underlying network connections in this ClientConn.
 func WithStatsHandler(h stats.Handler) DialOption {
-	return func(o *dialOptions) {
-		o.copts.StatsHandler = h
+	return func(o *clientOptions) {
+		o.statsHandler = h
 	}
 }
 
 // WithUserAgent returns a DialOption that specifies a user agent string for all the RPCs.
 func WithUserAgent(s string) DialOption {
-	return func(o *dialOptions) {
-		o.copts.UserAgent = s
+	return func(o *clientOptions) {
+		o.userAgent = s
 	}
 }
 
-func NewClientConn(hc *http.Client, target string, opts ...DialOption) (*ClientConn, error) {
+// NewClient returns a new gRPC client for the provided target server.
+// If the provided HTTP client is nil, http.DefaultClient is used.
+// The target should be a URL scheme and authority, without a path.
+// For example, "https://api.example.com" for TLS or "http://10.0.5.3:5000"
+// for unencrypted HTTP/2.
+//
+// The returned type is named "ClientConn" for legacy reasons. It does
+// not necessarily represent one actual connection. (It might be zero
+// or multiple.)
+func NewClient(hc *http.Client, target string, opts ...DialOption) (*ClientConn, error) {
 	if hc == nil {
 		hc = http.DefaultClient
 	}
 	if target == "" {
-		// TODO(bradfitz): document this function, and target.
 		return nil, errors.New("NewClientConn: missing required target parameter")
 	}
 	cc := &ClientConn{
@@ -147,22 +154,12 @@ func NewClientConn(hc *http.Client, target string, opts ...DialOption) (*ClientC
 		target: target,
 	}
 	for _, opt := range opts {
-		opt(&cc.dopts)
+		opt(&cc.opts)
 	}
 
 	// Set defaults.
-	if cc.dopts.codec == nil {
-		cc.dopts.codec = protoCodec{}
-	}
-	creds := cc.dopts.copts.TransportCredentials
-	if creds != nil && creds.Info().ServerName != "" {
-		cc.authority = creds.Info().ServerName
-	} else {
-		colonPos := strings.LastIndex(target, ":")
-		if colonPos == -1 {
-			colonPos = len(target)
-		}
-		cc.authority = target[:colonPos]
+	if cc.opts.codec == nil {
+		cc.opts.codec = protoCodec{}
 	}
 	return cc, nil
 }
@@ -200,12 +197,16 @@ func (s ConnectivityState) String() string {
 	}
 }
 
-// ClientConn represents a client connection to an RPC server.
+// ClientConn is a gRPC client.
+//
+// Despite its name, it is not necessarily a single
+// connection. Depending on its underlying transport, it could be
+// using zero or multiple TCP or other connections, and changing over
+// time.
 type ClientConn struct {
-	target    string // server URL prefix (scheme + authority, optional port), without path ("https://api.example.com"); use http:// for h2c
-	authority string // TODO(bradfitz): ???
-	dopts     dialOptions
-	hc        *http.Client
+	target string // server URL prefix (scheme + authority, optional port), without path ("https://api.example.com"); use http:// for h2c
+	opts   clientOptions
+	hc     *http.Client
 
 	sc *ServiceConfig // TODO(bradfitz): support; may be nil for now
 }
@@ -220,6 +221,17 @@ func (cc *ClientConn) getMethodConfig(method string) (m MethodConfig, ok bool) {
 
 // Close tears down the ClientConn and all underlying connections.
 func (cc *ClientConn) Close() error {
-	// TODO(bradfitz): something.
+	// TODO(bradfitz): something? maybe just close some cancel
+	// chan that we then merge into all http Request's context
+	// with some new context.Context impl? And then do some
+	// http.Transport.CloseIdleConnections? But first research
+	// what callers of this actually expect. It's unclear.
 	return nil
+}
+
+// DialContext is the old way to create a gRPC client.
+//
+// Deprecated: use NewClient instead.
+func DialContext(ctx context.Context, target string, opts ...DialOption) (*ClientConn, error) {
+	return nil, errors.New("grpc: DialContext is deleted for now in the experimental branch")
 }
