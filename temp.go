@@ -34,10 +34,7 @@
 
 package grpc
 
-import (
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/naming"
-)
+import "google.golang.org/grpc/naming"
 
 // Deprecated: don't use for now.
 type Balancer struct{}
@@ -50,11 +47,4 @@ func RoundRobin(r naming.Resolver) Balancer {
 // Deprecated: don't use for now.
 func WithBalancer(b Balancer) DialOption {
 	return func(o *clientOptions) {}
-}
-
-// Deprecated: don't use for now.
-func WithTransportCredentials(creds credentials.TransportCredentials) DialOption {
-	return func(o *clientOptions) {
-		panic("temporarily no longer supported, at least not here")
-	}
 }

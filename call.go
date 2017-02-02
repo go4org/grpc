@@ -161,7 +161,7 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 	}
 	hdr := req.Header
 	hdr.Set("Te", "trailers")
-	hdr.Set("Content-Type", "application/grpc+proto")
+	hdr.Set("Content-Type", "application/grpc") // WITHOUT +proto, or Google GFE 404s
 	if compressAlg != "" {
 		hdr.Set("Grpc-Encoding", compressAlg)
 	}
@@ -236,9 +236,26 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 		return Errorf(codes.Internal, "grpc: malformed response with extra data after first message")
 	}
 
-	// TODO(bradfitz): now that we've seen res.Body return EOF,
-	// the Trailers are valid.  Capture that and return it if that
-	// copt is set.
+	// Now that we've seen res.Body return EOF,
+	// the Trailers are valid.
+
+	// Capture that and return it if that copt is set.
+	statusStrs := res.Trailer["Grpc-Status"]
+	if len(statusStrs) == 0 {
+		return Errorf(codes.Internal, "grpc: malformed response from server; lacks grpc-status")
+	}
+	if len(statusStrs) > 1 {
+		return Errorf(codes.Internal, "grpc: malformed response from server; multiple grpc-status values")
+	}
+	statusStr := statusStrs[0]
+	statusCode, err := strconv.ParseUint(statusStr, 10, 32)
+	if err != nil {
+		return Errorf(codes.Internal, "grpc: malformed grpc-status from server")
+	}
+	if statusCode != 0 {
+		// TODO: something better
+		return Errorf(codes.Code(statusCode), "grpc: error code from server")
+	}
 
 	if statsOut != nil {
 		statsOut.SentTime = time.Now() // TODO(bradfitz): set this earlier probably

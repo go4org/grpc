@@ -72,11 +72,10 @@ type clientOptions struct {
 	dc    Decompressor
 
 	// All may be zero:
-	perRPCCreds  []credentials.PerRPCCredentials
-	userAgent    string
-	statsHandler stats.Handler
-
-	//copts transport.ConnectOptions
+	perRPCCreds    []credentials.PerRPCCredentials
+	userAgent      string
+	statsHandler   stats.Handler
+	transportCreds credentials.TransportCredentials // only checked for non-nil for now
 }
 
 // DialOption is a client option.
@@ -156,7 +155,6 @@ func NewClient(hc *http.Client, target string, opts ...DialOption) (*ClientConn,
 	for _, opt := range opts {
 		opt(&cc.opts)
 	}
-
 	// Set defaults.
 	if cc.opts.codec == nil {
 		cc.opts.codec = protoCodec{}
@@ -229,9 +227,32 @@ func (cc *ClientConn) Close() error {
 	return nil
 }
 
+// WithTransportCredentials is controls whether to use TLS or not for connections.
+//
+// Deprecated: this is only respected in a minimal form to let
+// existing code in the wild work. Uew NewClient instead.
+func WithTransportCredentials(creds credentials.TransportCredentials) DialOption {
+	return func(o *clientOptions) {
+		o.transportCreds = creds
+	}
+}
+
 // DialContext is the old way to create a gRPC client.
 //
 // Deprecated: use NewClient instead.
 func DialContext(ctx context.Context, target string, opts ...DialOption) (*ClientConn, error) {
-	return nil, errors.New("grpc: DialContext is deleted for now in the experimental branch")
+	var o clientOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+	if o.transportCreds != nil {
+		if o.transportCreds.Info().SecurityProtocol == "tls" {
+			target = "https://" + target
+			// TODO(bradfitz): care about the rest? use the interface?
+			// Not today. Prefer to delete the interace.
+		} else {
+			return nil, fmt.Errorf("unsupported TransportCredentials %+v", o.transportCreds.Info())
+		}
+	}
+	return NewClient(nil, target, opts...)
 }
