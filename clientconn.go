@@ -76,6 +76,7 @@ type clientOptions struct {
 	userAgent      string
 	statsHandler   stats.Handler
 	transportCreds credentials.TransportCredentials // only checked for non-nil for now
+	insecure       bool                             // not TLS
 }
 
 // DialOption is a client option.
@@ -237,6 +238,13 @@ func WithTransportCredentials(creds credentials.TransportCredentials) DialOption
 	}
 }
 
+// WithInsecure returns a DialOption which disables transport security for this ClientConn.
+// WithInsecure is mutually exclusive with use of WithTransportCredentials or https
+// endpoints.
+func WithInsecure() DialOption {
+	return func(o *clientOptions) { o.insecure = true }
+}
+
 // DialContext is the old way to create a gRPC client.
 //
 // Deprecated: use NewClient instead.
@@ -244,6 +252,9 @@ func DialContext(ctx context.Context, target string, opts ...DialOption) (*Clien
 	var o clientOptions
 	for _, opt := range opts {
 		opt(&o)
+	}
+	if (o.transportCreds != nil) == o.insecure {
+		return nil, fmt.Errorf("only one of TransportCredentials or Insecure may be used")
 	}
 	if o.transportCreds != nil {
 		if o.transportCreds.Info().SecurityProtocol == "tls" {
@@ -253,6 +264,9 @@ func DialContext(ctx context.Context, target string, opts ...DialOption) (*Clien
 		} else {
 			return nil, fmt.Errorf("unsupported TransportCredentials %+v", o.transportCreds.Info())
 		}
+	}
+	if o.insecure {
+		panic("TODO: implement insecure http2.Transport dialing")
 	}
 	return NewClient(nil, target, opts...)
 }
