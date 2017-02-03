@@ -200,12 +200,10 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		// TODO: error mapping; see TODOs above.
-		return Errorf(codes.Internal, "grpc: %v", err)
+		return Errorf(codes.Internal, "grpc: unexpected status code %v", res.Status)
 	}
-	if !strings.HasPrefix(res.Header.Get("Content-Type"), "application/grpc") {
-		// TODO: error mapping; see TODOs above.
-		return Errorf(codes.Internal, "grpc: %v", err)
+	if ct := res.Header.Get("Content-Type"); !strings.HasPrefix(ct, "application/grpc") {
+		return Errorf(codes.Internal, "grpc: unexpected content-type %q", ct)
 	}
 	maxMsgSize := 10 << 20 // TODO(bradfitz): set this
 
@@ -225,15 +223,19 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 		maxMsgSize,
 		inPayload)
 
-	if err != nil {
-		// TODO: error mapping; see TODOs above.
-		return Errorf(codes.Internal, "grpc: %v", err)
-	}
+	immediateEOF := err == io.EOF
 
-	// Check for only 1 message. We should hit an EOF immediately.
-	// TODO(bradfitz): I believe. Looks like streaming RPCs go via another path.
-	if _, err := res.Body.Read(p.header[:1]); err != io.EOF {
-		return Errorf(codes.Internal, "grpc: malformed response with extra data after first message")
+	if !immediateEOF {
+		if err != nil {
+			// TODO: error mapping; see TODOs above.
+			return Errorf(codes.Internal, "grpc: %v", err)
+		}
+
+		// Check for only 1 message. We should hit an EOF immediately.
+		// TODO(bradfitz): I believe. Looks like streaming RPCs go via another path.
+		if _, err := res.Body.Read(p.header[:1]); err != io.EOF {
+			return Errorf(codes.Internal, "grpc: malformed response with extra data after first message")
+		}
 	}
 
 	// Now that we've seen res.Body return EOF,
@@ -253,8 +255,14 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 		return Errorf(codes.Internal, "grpc: malformed grpc-status from server")
 	}
 	if statusCode != 0 {
-		// TODO: something better
-		return Errorf(codes.Code(statusCode), "grpc: error code from server")
+		msg := res.Trailer.Get("Grpc-Message")
+		if msg == "" {
+			msg = "no grpc-message from server"
+		}
+		return Errorf(codes.Code(statusCode), "grpc: %v", msg)
+	}
+	if immediateEOF {
+		return Errorf(codes.Internal, "gprc: unexpected empty response from server with grpc-status 0")
 	}
 
 	if statsOut != nil {
