@@ -256,3 +256,11 @@ func DialContext(ctx context.Context, target string, opts ...DialOption) (*Clien
 	}
 	return NewClient(nil, target, opts...)
 }
+
+// Dial is the old way to create a gRPC client.
+//
+// Deprecated: use NewClient instead. This only exists to let existing code
+// in the wild work.
+func Dial(target string, opts ...DialOption) (*ClientConn, error) {
+	return DialContext(context.Background(), target, opts...)
+}
