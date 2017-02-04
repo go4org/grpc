@@ -199,6 +199,9 @@ func (cc *ClientConn) invoke(ctx context.Context, method string, args, reply int
 	}
 	defer res.Body.Close()
 
+	if !res.ProtoAtLeast(2, 0) {
+		return Errorf(codes.Internal, "grpc: HTTP/2 required; response was %v", res.Proto)
+	}
 	if res.StatusCode != 200 {
 		return Errorf(codes.Internal, "grpc: unexpected status code %v", res.Status)
 	}
