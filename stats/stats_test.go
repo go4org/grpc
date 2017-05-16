@@ -44,10 +44,10 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/stats"
-	testpb "google.golang.org/grpc/stats/grpc_testing"
+	"go4.org/grpc"
+	"go4.org/grpc/metadata"
+	"go4.org/grpc/stats"
+	testpb "go4.org/grpc/stats/grpc_testing"
 )
 
 func init() {

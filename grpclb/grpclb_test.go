@@ -44,13 +44,13 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
-	hwpb "google.golang.org/grpc/examples/helloworld/helloworld"
-	lbpb "google.golang.org/grpc/grpclb/grpc_lb_v1"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/naming"
+	"go4.org/grpc"
+	"go4.org/grpc/codes"
+	"go4.org/grpc/credentials"
+	hwpb "go4.org/grpc/examples/helloworld/helloworld"
+	lbpb "go4.org/grpc/grpclb/grpc_lb_v1"
+	"go4.org/grpc/metadata"
+	"go4.org/grpc/naming"
 )
 
 var (

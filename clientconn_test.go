@@ -40,7 +40,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"google.golang.org/grpc/credentials"
+	"go4.org/grpc/credentials"
 )
 
 const tlsDir = "testdata/"

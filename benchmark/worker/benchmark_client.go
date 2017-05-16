@@ -40,13 +40,13 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/benchmark"
-	testpb "google.golang.org/grpc/benchmark/grpc_testing"
-	"google.golang.org/grpc/benchmark/stats"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/grpclog"
+	"go4.org/grpc"
+	"go4.org/grpc/benchmark"
+	testpb "go4.org/grpc/benchmark/grpc_testing"
+	"go4.org/grpc/benchmark/stats"
+	"go4.org/grpc/codes"
+	"go4.org/grpc/credentials"
+	"go4.org/grpc/grpclog"
 )
 
 var (

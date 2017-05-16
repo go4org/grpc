@@ -46,10 +46,10 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/stats"
-	"google.golang.org/grpc/transport"
+	"go4.org/grpc/codes"
+	"go4.org/grpc/metadata"
+	"go4.org/grpc/stats"
+	"go4.org/grpc/transport"
 )
 
 // Codec defines the interface gRPC uses to encode and decode messages.

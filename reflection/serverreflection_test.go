@@ -43,9 +43,9 @@ import (
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
-	pb "google.golang.org/grpc/reflection/grpc_testing"
+	"go4.org/grpc"
+	rpb "go4.org/grpc/reflection/grpc_reflection_v1alpha"
+	pb "go4.org/grpc/reflection/grpc_testing"
 )
 
 var (

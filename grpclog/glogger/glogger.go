@@ -40,7 +40,7 @@ import (
 	"fmt"
 
 	"github.com/golang/glog"
-	"google.golang.org/grpc/grpclog"
+	"go4.org/grpc/grpclog"
 )
 
 func init() {

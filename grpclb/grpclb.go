@@ -43,12 +43,12 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	lbpb "google.golang.org/grpc/grpclb/grpc_lb_v1"
-	"google.golang.org/grpc/grpclog"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/naming"
+	"go4.org/grpc"
+	"go4.org/grpc/codes"
+	lbpb "go4.org/grpc/grpclb/grpc_lb_v1"
+	"go4.org/grpc/grpclog"
+	"go4.org/grpc/metadata"
+	"go4.org/grpc/naming"
 )
 
 // AddressType indicates the address type returned by name resolution.

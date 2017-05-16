@@ -44,11 +44,11 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/grpclog"
-	testpb "google.golang.org/grpc/interop/grpc_testing"
-	"google.golang.org/grpc/metadata"
+	"go4.org/grpc"
+	"go4.org/grpc/codes"
+	"go4.org/grpc/grpclog"
+	testpb "go4.org/grpc/interop/grpc_testing"
+	"go4.org/grpc/metadata"
 )
 
 var (

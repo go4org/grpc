@@ -39,8 +39,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/stats"
+	"go4.org/grpc/credentials"
+	"go4.org/grpc/stats"
 )
 
 var (

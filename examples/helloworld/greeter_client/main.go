@@ -38,8 +38,8 @@ import (
 	"os"
 
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	pb "google.golang.org/grpc/examples/helloworld/helloworld"
+	"go4.org/grpc"
+	pb "go4.org/grpc/examples/helloworld/helloworld"
 )
 
 const (

@@ -10,7 +10,7 @@ Installation
 
 For development convenience (but not user convenience), the Go package path for this
 repositor is unchanged. You can not fetch it with `go get`. You just `git clone` it to
-`$GOPATH/src/google.golang.org/grpc` manually.
+`$GOPATH/src/go4.org/grpc` manually.
 
 Prerequisites
 -------------

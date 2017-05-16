@@ -39,9 +39,9 @@ import (
 	"io"
 
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
-	metricspb "google.golang.org/grpc/stress/grpc_testing"
+	"go4.org/grpc"
+	"go4.org/grpc/grpclog"
+	metricspb "go4.org/grpc/stress/grpc_testing"
 )
 
 var (

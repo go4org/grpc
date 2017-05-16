@@ -42,9 +42,9 @@ import (
 	"net"
 
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	testpb "google.golang.org/grpc/benchmark/grpc_testing"
-	"google.golang.org/grpc/grpclog"
+	"go4.org/grpc"
+	testpb "go4.org/grpc/benchmark/grpc_testing"
+	"go4.org/grpc/grpclog"
 )
 
 func newPayload(t testpb.PayloadType, size int) *testpb.Payload {
