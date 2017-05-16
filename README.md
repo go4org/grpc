@@ -1,4 +1,4 @@
-#gRPC-Go experimental branch
+# gRPC-Go experimental branch
 
 This is an in-development experimental branch of https://github.com/grpc/grpc-go
 
@@ -8,9 +8,7 @@ Go's native HTTP/2 implementation. (Preliminary prototypes suggest most of it.)
 Installation
 ------------
 
-For development convenience (but not user convenience), the Go package path for this
-repositor is unchanged. You can not fetch it with `go get`. You just `git clone` it to
-`$GOPATH/src/go4.org/grpc` manually.
+`go install go4.org/grpc`
 
 Prerequisites
 -------------
@@ -24,4 +22,5 @@ An experiment.
 Bugs, discussion
 ----------------
 
-Let's just use this issue tracker for now: https://github.com/bradfitz/grpc-go/issues
+Let's just use this issue tracker for now: https://github.com/go4org/grpc/issues
+
