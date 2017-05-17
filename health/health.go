@@ -5,7 +5,7 @@ package health
 import (
 	"sync"
 
-	"golang.org/x/net/context"
+	"context"
 	"go4.org/grpc"
 	"go4.org/grpc/codes"
 	healthpb "go4.org/grpc/health/grpc_health_v1"

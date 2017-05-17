@@ -34,7 +34,7 @@
 package grpc
 
 import (
-	"golang.org/x/net/context"
+	"context"
 )
 
 // Streamer is called by StreamClientInterceptor to create a ClientStream.

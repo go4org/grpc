@@ -46,9 +46,7 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/trace"
+	"context"
 	"go4.org/grpc/codes"
 	"go4.org/grpc/credentials"
 	"go4.org/grpc/grpclog"
@@ -57,6 +55,8 @@ import (
 	"go4.org/grpc/stats"
 	"go4.org/grpc/tap"
 	"go4.org/grpc/transport"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/trace"
 )
 
 type methodHandler func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor UnaryServerInterceptor) (interface{}, error)

@@ -47,12 +47,12 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
-	"golang.org/x/net/http2"
+	"context"
 	"go4.org/grpc/codes"
 	"go4.org/grpc/credentials"
 	"go4.org/grpc/metadata"
 	"go4.org/grpc/peer"
+	"golang.org/x/net/http2"
 )
 
 // NewServerHandlerTransport returns a ServerTransport handling gRPC

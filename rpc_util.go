@@ -44,8 +44,8 @@ import (
 	"os"
 	"time"
 
+	"context"
 	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
 	"go4.org/grpc/codes"
 	"go4.org/grpc/metadata"
 	"go4.org/grpc/stats"

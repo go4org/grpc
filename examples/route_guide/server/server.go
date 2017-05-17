@@ -47,7 +47,7 @@ import (
 	"net"
 	"time"
 
-	"golang.org/x/net/context"
+	"context"
 	"go4.org/grpc"
 
 	"go4.org/grpc/credentials"

@@ -39,7 +39,7 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
+	"context"
 	"go4.org/grpc"
 	"go4.org/grpc/benchmark"
 	testpb "go4.org/grpc/benchmark/grpc_testing"

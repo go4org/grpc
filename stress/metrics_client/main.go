@@ -38,7 +38,7 @@ import (
 	"fmt"
 	"io"
 
-	"golang.org/x/net/context"
+	"context"
 	"go4.org/grpc"
 	"go4.org/grpc/grpclog"
 	metricspb "go4.org/grpc/stress/grpc_testing"

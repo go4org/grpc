@@ -38,7 +38,7 @@ package peer
 import (
 	"net"
 
-	"golang.org/x/net/context"
+	"context"
 	"go4.org/grpc/credentials"
 )
 

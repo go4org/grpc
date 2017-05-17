@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/net/context"
+	"context"
 	"go4.org/grpc"
 	testpb "go4.org/grpc/benchmark/grpc_testing"
 	"go4.org/grpc/benchmark/stats"

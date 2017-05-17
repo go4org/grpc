@@ -40,8 +40,8 @@ import (
 	"reflect"
 	"testing"
 
+	"context"
 	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
 	"go4.org/grpc/codes"
 	perfpb "go4.org/grpc/test/codec_perf"
 	"go4.org/grpc/transport"

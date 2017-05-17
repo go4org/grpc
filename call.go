@@ -40,11 +40,11 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/net/context"
-	"golang.org/x/net/trace"
+	"context"
 	"go4.org/grpc/codes"
 	"go4.org/grpc/metadata"
 	"go4.org/grpc/stats"
+	"golang.org/x/net/trace"
 )
 
 // Invoke sends a non-streaming RPC request on the wire and returns

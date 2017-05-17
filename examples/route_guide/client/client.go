@@ -43,7 +43,7 @@ import (
 	"math/rand"
 	"time"
 
-	"golang.org/x/net/context"
+	"context"
 	"go4.org/grpc"
 	"go4.org/grpc/credentials"
 	pb "go4.org/grpc/examples/route_guide/routeguide"

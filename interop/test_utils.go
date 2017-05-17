@@ -40,15 +40,15 @@ import (
 	"strings"
 	"time"
 
+	"context"
 	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"go4.org/grpc"
 	"go4.org/grpc/codes"
 	"go4.org/grpc/grpclog"
 	testpb "go4.org/grpc/interop/grpc_testing"
 	"go4.org/grpc/metadata"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 var (

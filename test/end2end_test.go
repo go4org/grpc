@@ -53,9 +53,8 @@ import (
 	"testing"
 	"time"
 
+	"context"
 	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
-	"golang.org/x/net/http2"
 	"go4.org/grpc"
 	"go4.org/grpc/codes"
 	"go4.org/grpc/credentials"
@@ -67,6 +66,7 @@ import (
 	"go4.org/grpc/peer"
 	"go4.org/grpc/tap"
 	testpb "go4.org/grpc/test/grpc_testing"
+	"golang.org/x/net/http2"
 )
 
 var (

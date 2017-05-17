@@ -40,9 +40,9 @@ import (
 	"sort"
 	"testing"
 
+	"context"
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"golang.org/x/net/context"
 	"go4.org/grpc"
 	rpb "go4.org/grpc/reflection/grpc_reflection_v1alpha"
 	pb "go4.org/grpc/reflection/grpc_testing"

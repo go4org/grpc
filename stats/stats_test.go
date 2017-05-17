@@ -42,8 +42,8 @@ import (
 	"testing"
 	"time"
 
+	"context"
 	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
 	"go4.org/grpc"
 	"go4.org/grpc/metadata"
 	"go4.org/grpc/stats"

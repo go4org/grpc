@@ -39,12 +39,12 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
-	"golang.org/x/net/trace"
+	"context"
 	"go4.org/grpc/codes"
 	"go4.org/grpc/metadata"
 	"go4.org/grpc/stats"
 	"go4.org/grpc/transport"
+	"golang.org/x/net/trace"
 )
 
 // StreamHandler defines the handler called by gRPC server to complete the

@@ -42,7 +42,7 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
+	"context"
 	"go4.org/grpc"
 	"go4.org/grpc/codes"
 	lbpb "go4.org/grpc/grpclb/grpc_lb_v1"

@@ -37,7 +37,7 @@ import (
 	"log"
 	"os"
 
-	"golang.org/x/net/context"
+	"context"
 	"go4.org/grpc"
 	pb "go4.org/grpc/examples/helloworld/helloworld"
 )

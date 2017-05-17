@@ -45,7 +45,7 @@ import (
 	"net"
 	"sync"
 
-	"golang.org/x/net/context"
+	"context"
 	"go4.org/grpc/codes"
 	"go4.org/grpc/credentials"
 	"go4.org/grpc/metadata"

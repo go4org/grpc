@@ -44,11 +44,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/hpack"
 	"go4.org/grpc/codes"
 	"go4.org/grpc/grpclog"
 	"go4.org/grpc/metadata"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/hpack"
 )
 
 const (
