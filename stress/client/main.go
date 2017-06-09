@@ -45,13 +45,13 @@ import (
 	"time"
 
 	"context"
-	"go4.org/grpc"
-	"go4.org/grpc/codes"
-	"go4.org/grpc/credentials"
-	"go4.org/grpc/grpclog"
-	"go4.org/grpc/interop"
-	testpb "go4.org/grpc/interop/grpc_testing"
-	metricspb "go4.org/grpc/stress/grpc_testing"
+	"grpc.go4.org"
+	"grpc.go4.org/codes"
+	"grpc.go4.org/credentials"
+	"grpc.go4.org/grpclog"
+	"grpc.go4.org/interop"
+	testpb "grpc.go4.org/interop/grpc_testing"
+	metricspb "grpc.go4.org/stress/grpc_testing"
 )
 
 var (

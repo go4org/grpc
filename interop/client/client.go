@@ -38,12 +38,12 @@ import (
 	"net"
 	"strconv"
 
-	"go4.org/grpc"
-	"go4.org/grpc/credentials"
-	"go4.org/grpc/credentials/oauth"
-	"go4.org/grpc/grpclog"
-	"go4.org/grpc/interop"
-	testpb "go4.org/grpc/interop/grpc_testing"
+	"grpc.go4.org"
+	"grpc.go4.org/credentials"
+	"grpc.go4.org/credentials/oauth"
+	"grpc.go4.org/grpclog"
+	"grpc.go4.org/interop"
+	testpb "grpc.go4.org/interop/grpc_testing"
 )
 
 var (

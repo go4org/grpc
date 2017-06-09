@@ -48,14 +48,14 @@ import (
 	"time"
 
 	"context"
-	"go4.org/grpc"
+	"grpc.go4.org"
 
-	"go4.org/grpc/credentials"
-	"go4.org/grpc/grpclog"
+	"grpc.go4.org/credentials"
+	"grpc.go4.org/grpclog"
 
 	"github.com/golang/protobuf/proto"
 
-	pb "go4.org/grpc/examples/route_guide/routeguide"
+	pb "grpc.go4.org/examples/route_guide/routeguide"
 )
 
 var (

@@ -34,7 +34,7 @@
 // Package stats is for collecting and reporting various network and RPC stats.
 // This package is for monitoring purpose only. All fields are read-only.
 // All APIs are experimental.
-package stats // import "go4.org/grpc/stats"
+package stats // import "grpc.go4.org/stats"
 
 import (
 	"net"

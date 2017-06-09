@@ -45,8 +45,8 @@ import (
 	"time"
 
 	"context"
-	"go4.org/grpc/codes"
-	"go4.org/grpc/transport"
+	"grpc.go4.org/codes"
+	"grpc.go4.org/transport"
 )
 
 var (

@@ -44,8 +44,8 @@ import (
 	"time"
 
 	"context"
-	"go4.org/grpc/codes"
-	"go4.org/grpc/metadata"
+	"grpc.go4.org/codes"
+	"grpc.go4.org/metadata"
 )
 
 func TestHandlerTransport_NewServerHandlerTransport(t *testing.T) {

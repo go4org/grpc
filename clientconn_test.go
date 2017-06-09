@@ -40,7 +40,7 @@ import (
 
 	"context"
 
-	"go4.org/grpc/credentials"
+	"grpc.go4.org/credentials"
 )
 
 const tlsDir = "testdata/"

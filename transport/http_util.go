@@ -44,9 +44,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"go4.org/grpc/codes"
-	"go4.org/grpc/grpclog"
-	"go4.org/grpc/metadata"
+	"grpc.go4.org/codes"
+	"grpc.go4.org/grpclog"
+	"grpc.go4.org/metadata"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
 )

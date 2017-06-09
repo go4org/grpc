@@ -43,12 +43,12 @@ import (
 	"time"
 
 	"context"
-	"go4.org/grpc"
-	"go4.org/grpc/codes"
-	lbpb "go4.org/grpc/grpclb/grpc_lb_v1"
-	"go4.org/grpc/grpclog"
-	"go4.org/grpc/metadata"
-	"go4.org/grpc/naming"
+	"grpc.go4.org"
+	"grpc.go4.org/codes"
+	lbpb "grpc.go4.org/grpclb/grpc_lb_v1"
+	"grpc.go4.org/grpclog"
+	"grpc.go4.org/metadata"
+	"grpc.go4.org/naming"
 )
 
 // AddressType indicates the address type returned by name resolution.

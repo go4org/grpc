@@ -48,10 +48,10 @@ import (
 	"time"
 
 	"context"
-	"go4.org/grpc/codes"
-	"go4.org/grpc/credentials"
-	"go4.org/grpc/metadata"
-	"go4.org/grpc/peer"
+	"grpc.go4.org/codes"
+	"grpc.go4.org/credentials"
+	"grpc.go4.org/metadata"
+	"grpc.go4.org/peer"
 	"golang.org/x/net/http2"
 )
 

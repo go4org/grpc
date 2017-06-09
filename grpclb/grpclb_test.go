@@ -44,13 +44,13 @@ import (
 	"time"
 
 	"context"
-	"go4.org/grpc"
-	"go4.org/grpc/codes"
-	"go4.org/grpc/credentials"
-	hwpb "go4.org/grpc/examples/helloworld/helloworld"
-	lbpb "go4.org/grpc/grpclb/grpc_lb_v1"
-	"go4.org/grpc/metadata"
-	"go4.org/grpc/naming"
+	"grpc.go4.org"
+	"grpc.go4.org/codes"
+	"grpc.go4.org/credentials"
+	hwpb "grpc.go4.org/examples/helloworld/helloworld"
+	lbpb "grpc.go4.org/grpclb/grpc_lb_v1"
+	"grpc.go4.org/metadata"
+	"grpc.go4.org/naming"
 )
 
 var (

@@ -38,7 +38,7 @@ The service implemented is defined in:
 https://github.com/grpc/grpc/blob/master/src/proto/grpc/reflection/v1alpha/reflection.proto.
 
 To register server reflection on a gRPC server:
-	import "go4.org/grpc/reflection"
+	import "grpc.go4.org/reflection"
 
 	s := grpc.NewServer()
 	pb.RegisterYourOwnServer(s, &server{})
@@ -49,7 +49,7 @@ To register server reflection on a gRPC server:
 	s.Serve(lis)
 
 */
-package reflection // import "go4.org/grpc/reflection"
+package reflection // import "grpc.go4.org/reflection"
 
 import (
 	"bytes"
@@ -62,9 +62,9 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"go4.org/grpc"
-	"go4.org/grpc/codes"
-	rpb "go4.org/grpc/reflection/grpc_reflection_v1alpha"
+	"grpc.go4.org"
+	"grpc.go4.org/codes"
+	rpb "grpc.go4.org/reflection/grpc_reflection_v1alpha"
 )
 
 type serverReflectionServer struct {

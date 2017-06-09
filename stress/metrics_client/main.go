@@ -39,9 +39,9 @@ import (
 	"io"
 
 	"context"
-	"go4.org/grpc"
-	"go4.org/grpc/grpclog"
-	metricspb "go4.org/grpc/stress/grpc_testing"
+	"grpc.go4.org"
+	"grpc.go4.org/grpclog"
+	metricspb "grpc.go4.org/stress/grpc_testing"
 )
 
 var (

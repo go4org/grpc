@@ -41,9 +41,9 @@ import (
 	"time"
 
 	"context"
-	"go4.org/grpc/codes"
-	"go4.org/grpc/metadata"
-	"go4.org/grpc/stats"
+	"grpc.go4.org/codes"
+	"grpc.go4.org/metadata"
+	"grpc.go4.org/stats"
 	"golang.org/x/net/trace"
 )
 

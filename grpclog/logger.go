@@ -34,7 +34,7 @@
 /*
 Package grpclog defines logging for grpc.
 */
-package grpclog // import "go4.org/grpc/grpclog"
+package grpclog // import "grpc.go4.org/grpclog"
 
 import (
 	"log"

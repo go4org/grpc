@@ -39,8 +39,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"go4.org/grpc/credentials"
-	"go4.org/grpc/stats"
+	"grpc.go4.org/credentials"
+	"grpc.go4.org/stats"
 )
 
 var (

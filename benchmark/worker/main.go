@@ -43,10 +43,10 @@ import (
 	"time"
 
 	"context"
-	"go4.org/grpc"
-	testpb "go4.org/grpc/benchmark/grpc_testing"
-	"go4.org/grpc/codes"
-	"go4.org/grpc/grpclog"
+	"grpc.go4.org"
+	testpb "grpc.go4.org/benchmark/grpc_testing"
+	"grpc.go4.org/codes"
+	"grpc.go4.org/grpclog"
 )
 
 var (

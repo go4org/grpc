@@ -39,7 +39,7 @@ import (
 	"net"
 
 	"context"
-	"go4.org/grpc/credentials"
+	"grpc.go4.org/credentials"
 )
 
 // Peer contains the information of the peer for an RPC.

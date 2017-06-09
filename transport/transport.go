@@ -35,7 +35,7 @@
 Package transport defines and implements message oriented communication channel
 to complete various transactions (e.g., an RPC).
 */
-package transport // import "go4.org/grpc/transport"
+package transport // import "grpc.go4.org/transport"
 
 import (
 	"bytes"
@@ -46,11 +46,11 @@ import (
 	"sync"
 
 	"context"
-	"go4.org/grpc/codes"
-	"go4.org/grpc/credentials"
-	"go4.org/grpc/metadata"
-	"go4.org/grpc/stats"
-	"go4.org/grpc/tap"
+	"grpc.go4.org/codes"
+	"grpc.go4.org/credentials"
+	"grpc.go4.org/metadata"
+	"grpc.go4.org/stats"
+	"grpc.go4.org/tap"
 )
 
 // recvMsg represents the received msg from the transport. All transport

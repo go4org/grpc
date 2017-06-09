@@ -38,9 +38,9 @@ import (
 	"net"
 
 	"context"
-	"go4.org/grpc"
-	pb "go4.org/grpc/examples/helloworld/helloworld"
-	"go4.org/grpc/reflection"
+	"grpc.go4.org"
+	pb "grpc.go4.org/examples/helloworld/helloworld"
+	"grpc.go4.org/reflection"
 )
 
 const (

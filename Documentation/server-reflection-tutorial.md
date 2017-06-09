@@ -17,9 +17,9 @@ For example, to enable server reflection in `example/helloworld`, we need to mak
 +++ b/examples/helloworld/greeter_server/main.go
 @@ -40,6 +40,7 @@ import (
         "context"
-        "go4.org/grpc"
-        pb "go4.org/grpc/examples/helloworld/helloworld"
-+       "go4.org/grpc/reflection"
+        "grpc.go4.org"
+        pb "grpc.go4.org/examples/helloworld/helloworld"
++       "grpc.go4.org/reflection"
  )
 
  const (

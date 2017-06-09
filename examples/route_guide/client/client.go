@@ -44,10 +44,10 @@ import (
 	"time"
 
 	"context"
-	"go4.org/grpc"
-	"go4.org/grpc/credentials"
-	pb "go4.org/grpc/examples/route_guide/routeguide"
-	"go4.org/grpc/grpclog"
+	"grpc.go4.org"
+	"grpc.go4.org/credentials"
+	pb "grpc.go4.org/examples/route_guide/routeguide"
+	"grpc.go4.org/grpclog"
 )
 
 var (

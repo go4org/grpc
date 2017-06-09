@@ -23,7 +23,7 @@ import math "math"
 
 import (
 	context "context"
-	grpc "go4.org/grpc"
+	grpc "grpc.go4.org"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

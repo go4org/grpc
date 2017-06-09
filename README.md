@@ -8,7 +8,7 @@ Go's native HTTP/2 implementation. (Preliminary prototypes suggest most of it.)
 Installation
 ------------
 
-`go install go4.org/grpc`
+`go install grpc.go4.org`
 
 Prerequisites
 -------------

@@ -9,8 +9,8 @@ and information about how to do so.
 
 1. Check out the code:
 
-        $ go get go4.org/grpc
-        $ cd $GOPATH/src/go4.org/grpc
+        $ go get grpc.go4.org
+        $ cd $GOPATH/src/grpc.go4.org
 
 1. Create a fork of the grpc-go repository.
 1. Add your fork as a remote:

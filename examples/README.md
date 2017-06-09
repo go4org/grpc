@@ -21,8 +21,8 @@ INSTALL
 -------
 
 ```
-$ go get -u go4.org/grpc/examples/helloworld/greeter_client
-$ go get -u go4.org/grpc/examples/helloworld/greeter_server
+$ go get -u grpc.go4.org/examples/helloworld/greeter_client
+$ go get -u grpc.go4.org/examples/helloworld/greeter_server
 ```
 
 TRY IT!

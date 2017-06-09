@@ -6,14 +6,14 @@ set -e
 workdir=.cover
 profile="$workdir/cover.out"
 mode=set
-end2endtest="go4.org/grpc/test"
+end2endtest="grpc.go4.org/test"
 
 generate_cover_data() {
     rm -rf "$workdir"
     mkdir "$workdir"
 
     for pkg in "$@"; do
-        if [ $pkg == "go4.org/grpc" -o $pkg == "google.golang.org/grpc/transport" -o $pkg == "google.golang.org/grpc/metadata" -o $pkg == "google.golang.org/grpc/credentials" ]
+        if [ $pkg == "grpc.go4.org" -o $pkg == "grpc.go4.org/transport" -o $pkg == "grpc.go4.org/metadata" -o $pkg == "grpc.go4.org/credentials" ]
             then
                 f="$workdir/$(echo $pkg | tr / -)"
                 go test -covermode="$mode" -coverprofile="$f.cover" "$pkg"

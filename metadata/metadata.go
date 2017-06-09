@@ -32,7 +32,7 @@
  */
 
 // Package metadata define the structure of the metadata supported by gRPC library.
-package metadata // import "go4.org/grpc/metadata"
+package metadata // import "grpc.go4.org/metadata"
 
 import (
 	"encoding/base64"

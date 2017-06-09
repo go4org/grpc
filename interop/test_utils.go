@@ -42,11 +42,11 @@ import (
 
 	"context"
 	"github.com/golang/protobuf/proto"
-	"go4.org/grpc"
-	"go4.org/grpc/codes"
-	"go4.org/grpc/grpclog"
-	testpb "go4.org/grpc/interop/grpc_testing"
-	"go4.org/grpc/metadata"
+	"grpc.go4.org"
+	"grpc.go4.org/codes"
+	"grpc.go4.org/grpclog"
+	testpb "grpc.go4.org/interop/grpc_testing"
+	"grpc.go4.org/metadata"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )

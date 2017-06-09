@@ -6,9 +6,9 @@ import (
 	"sync"
 
 	"context"
-	"go4.org/grpc"
-	"go4.org/grpc/codes"
-	healthpb "go4.org/grpc/health/grpc_health_v1"
+	"grpc.go4.org"
+	"grpc.go4.org/codes"
+	healthpb "grpc.go4.org/health/grpc_health_v1"
 )
 
 // Server implements `service Health`.

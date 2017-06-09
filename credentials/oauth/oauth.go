@@ -39,7 +39,7 @@ import (
 	"io/ioutil"
 
 	"context"
-	"go4.org/grpc/credentials"
+	"grpc.go4.org/credentials"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"

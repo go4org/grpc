@@ -42,9 +42,9 @@ import (
 
 	"context"
 	"github.com/golang/protobuf/proto"
-	"go4.org/grpc/codes"
-	perfpb "go4.org/grpc/test/codec_perf"
-	"go4.org/grpc/transport"
+	"grpc.go4.org/codes"
+	perfpb "grpc.go4.org/test/codec_perf"
+	"grpc.go4.org/transport"
 )
 
 func TestSimpleParsing(t *testing.T) {

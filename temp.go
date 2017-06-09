@@ -34,7 +34,7 @@
 
 package grpc
 
-import "go4.org/grpc/naming"
+import "grpc.go4.org/naming"
 
 // Deprecated: don't use for now.
 type Balancer struct{}

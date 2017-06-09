@@ -8,8 +8,8 @@ import (
 	_ "net/http/pprof"
 	"time"
 
-	"go4.org/grpc/benchmark"
-	"go4.org/grpc/grpclog"
+	"grpc.go4.org/benchmark"
+	"grpc.go4.org/grpclog"
 )
 
 var (
